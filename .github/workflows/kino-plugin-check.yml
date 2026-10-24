@@ -41,7 +41,7 @@ jobs:
           const exportMap = { search: 'search', home: 'home', browse: 'browse', episodes: 'episodes', resolve: 'resolve' };
           for (const capability of manifest.capabilities) {
             const exported = exportMap[capability];
-            if (exported && !new RegExp('export\\\\s+async\\\\s+function\\\\s+' + exported + '\\\\s*\\\\(').test(source)) {
+            if (exported && !source.includes('export async function ' + exported + '(')) {
               throw new Error('Capability "' + capability + '" is declared but export ' + exported + ' is missing');
             }
           }
