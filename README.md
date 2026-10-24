@@ -38,3 +38,24 @@ El reproductor utiliza un iframe de FrameXTV con el ID TMDB seleccionado. La dis
 - [TMDB](https://www.themoviedb.org/)
 
 Los nombres y enlaces externos pertenecen a sus respectivos titulares. TVCPL es un catálogo independiente y no afirma estar afiliado a esas plataformas.
+
+
+## Instalar como plugin de Kino
+
+Este repositorio también incluye los archivos de plugin de Kino en la raíz:
+
+- `kino-plugin.json`: manifiesto que Kino lee al instalar.
+- `plugin.js`: búsqueda, Inicio, episodios y resolución de reproducción.
+
+En Kino abre **Ajustes → Plugins → Agregar** y escribe:
+
+```
+robertojuncochacon-oss/Tvcpl
+```
+
+O pega el manifiesto:
+`https://raw.githubusercontent.com/robertojuncochacon-oss/Tvcpl/main/kino-plugin.json`
+
+Al instalarlo, Kino pedirá permiso para usar el navegador oculto y capturar un flujo de vídeo de FrameXTV. Acepta solo si quieres habilitar esa función. El catálogo necesita una clave o Read Access Token de TMDB: entra en los ajustes del plugin y pégalo allí; no lo guardes en el código ni lo publiques.
+
+**Compatibilidad real:** el manifiesto y el archivo JavaScript siguen el formato de plugins de Kino, pero la reproducción de cada título depende de que FrameXTV exponga un flujo HLS/DASH/MP4 que Kino pueda capturar. Este paso debe probarse dentro de Kino en tu dispositivo.
