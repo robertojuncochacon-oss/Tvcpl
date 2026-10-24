@@ -169,12 +169,11 @@ export async function resolve(ref) {
   let lastError = null;
 
   for (const provider of providers) {
-    const target = new URL(embed);
-    if (provider !== "auto") {
-      // FrameXTV documents both "server" and "provider" as provider selectors.
-      target.searchParams.set("server", provider);
-      target.searchParams.set("provider", provider);
-    }
+    // Avoid relying on browser globals inside Kino's plugin runtime.
+    // FrameXTV documents both "server" and "provider" query parameters.
+    const target = provider === "auto"
+      ? embed
+      : embed + "&server=" + provider + "&provider=" + provider;
     let captured;
     try {
       captured = await kino.browser.capture(target.toString(), {
