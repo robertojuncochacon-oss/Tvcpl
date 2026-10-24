@@ -1,0 +1,32 @@
+{
+  "id": "tvcpl",
+  "name": "TVCPL",
+  "version": "1.0.0",
+  "apiVersion": 6,
+  "entry": "plugin.js",
+  "description": "Catálogo de películas, series y anime con búsqueda TMDB y reproducción externa cuando FrameXTV ofrece un flujo compatible.",
+  "author": "robertojuncochacon-oss",
+  "homepage": "https://github.com/robertojuncochacon-oss/Tvcpl",
+  "hosts": [
+    "api.themoviedb.org",
+    "image.tmdb.org",
+    "framextv.xyz"
+  ],
+  "streamHosts": "any",
+  "browser": true,
+  "capabilities": [
+    "search",
+    "home",
+    "episodes",
+    "resolve"
+  ],
+  "color": "#e50914",
+  "settings": [
+    {
+      "key": "tmdbKey",
+      "label": "TMDB API key o Read Access Token",
+      "type": "text",
+      "hint": "Pega tu clave v3 o token v4. No la publiques en el repositorio."
+    }
+  ]
+}
