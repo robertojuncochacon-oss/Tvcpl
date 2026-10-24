@@ -165,7 +165,7 @@ export async function resolve(ref) {
   // FrameXTV embed pages are not direct media URLs. Try automatic selection first,
   // then its documented provider identifiers as fallbacks.
   const providers = ["auto", "barbarian", "archer", "goblin", "pekka"];
-  const match = "\\\\.m3u8|\\\\.mpd|\\\\.mp4|master\\\\.txt|videoplayback|/hls/|\\\\.m4v|\\\\.ts(?:[?#]|$)|\\\\.m3u(?:8)?(?:[?#]|$)|/manifest(?:[/?#]|$)|/playlist(?:[/?#]|$)";
+  const match = "\\.m3u8|\\.mpd|\\.mp4|master\\.txt|videoplayback|/hls/|\\.m4v|\\.ts(?:[?#]|$)|\\.m3u(?:8)?(?:[?#]|$)|/manifest(?:[/?#]|$)|/playlist(?:[/?#]|$)";
   let lastError = null;
 
   for (const provider of providers) {
