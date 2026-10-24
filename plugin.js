@@ -145,7 +145,7 @@ export async function resolve(ref) {
   }
 
   const media = (Array.isArray(captured && captured.media) ? captured.media : [])
-    .filter((m) => m && typeof m.url === "string" && /^https?:\\/\\//i.test(m.url));
+    .filter((m) => m && typeof m.url === "string" && /^https?:\/\//i.test(m.url));
   if (!media.length) {
     throw kino.error("unavailable", "FrameXTV abrió la página, pero no entregó a Kino una URL de vídeo compatible (HLS, DASH o MP4). Puede que el título no esté disponible o que el proveedor haya cambiado.");
   }
@@ -155,7 +155,7 @@ export async function resolve(ref) {
   const streams = media.map((m) => ({
     url: m.url,
     headers: m.headers && typeof m.headers === "object" ? m.headers : {},
-    label: /\\.m3u8(?:$|[?#])/i.test(m.url) ? "FrameXTV · HLS" : /\\.mpd(?:$|[?#])/i.test(m.url) ? "FrameXTV · DASH" : "FrameXTV · MP4"
+    label: /\.m3u8(?:$|[?#])/i.test(m.url) ? "FrameXTV · HLS" : /\.mpd(?:$|[?#])/i.test(m.url) ? "FrameXTV · DASH" : "FrameXTV · MP4"
   }));
   return { ...streams[0], alternatives: streams.slice(1) };
 }
