@@ -3,6 +3,15 @@ import { useEffect, useMemo, useState } from 'react';
 const API = 'https://api.themoviedb.org/3';
 const IMG = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP = 'https://image.tmdb.org/t/p/w1280';
+function tmdbUrl(path, key) {
+  const isReadToken = key.startsWith('eyJ') || key.split('.').length === 3;
+  if (isReadToken) return API + path;
+  return API + path + (path.includes('?') ? '&' : '?') + 'api_key=' + encodeURIComponent(key);
+}
+function tmdbHeaders(key) {
+  const isReadToken = key.startsWith('eyJ') || key.split('.').length === 3;
+  return isReadToken ? { accept: 'application/json', Authorization: `Bearer ${key}` } : { accept: 'application/json' };
+}
 const SOURCES = [
   { name: 'TBCPL', url: 'https://tbcpl.lol/', note: 'Catálogo externo' },
   { name: 'IMDb', url: 'https://www.imdb.com/', note: 'Información y valoraciones' },
@@ -49,7 +58,7 @@ export default function App() {
         else if (category === 'anime') endpoint = '/discover/tv?with_genres=16&with_original_language=ja&sort_by=popularity.desc&language=es-ES';
         else if (category === 'favorites') { setItems(favorites); setLoading(false); return; }
         else endpoint = '/trending/all/week?language=es-ES';
-        const response = await fetch(API + endpoint, { headers: { Authorization: `Bearer ${apiKey}`, accept: 'application/json' }, signal: controller.signal });
+        const response = await fetch(tmdbUrl(endpoint, apiKey), { headers: tmdbHeaders(apiKey), signal: controller.signal });
         if (!response.ok) throw new Error(response.status === 401 ? 'TMDB rechazó la clave. Revísala en Ajustes.' : `TMDB respondió con error ${response.status}.`);
         const data = await response.json();
         setItems((data.results || []).filter(x => x.media_type !== 'person' && (x.poster_path || x.backdrop_path)).map(x => ({...x, media_type: x.media_type || (x.first_air_date ? 'tv' : 'movie')})));
@@ -63,7 +72,7 @@ export default function App() {
   useEffect(() => {
     if (!selected || !apiKey) { setDetails(null); return; }
     const kind = selected.media_type === 'tv' ? 'tv' : 'movie';
-    fetch(`${API}/${kind}/${selected.id}?language=es-ES`, { headers: { Authorization: `Bearer ${apiKey}` } })
+    fetch(tmdbUrl(`/${kind}/${selected.id}?language=es-ES`, apiKey), { headers: tmdbHeaders(apiKey) })
       .then(r => { if (!r.ok) throw new Error('No se pudo cargar la ficha'); return r.json(); })
       .then(setDetails).catch(() => setDetails(selected));
   }, [selected, apiKey]);
