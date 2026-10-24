@@ -130,14 +130,32 @@ export async function resolve(ref) {
   }
   // FrameXTV is an embed page, not a direct video URL. Ask Kino's approved hidden
   // browser to capture a real HLS/DASH/MP4 request from the player.
-  const captured = await kino.browser.capture(embed, { timeoutMs: 22000 });
-  const media = Array.isArray(captured.media) ? captured.media : [];
-  if (!media.length) throw kino.error("unavailable", "FrameXTV no expuso un flujo reproducible. Prueba otro título o servidor.");
-  const first = media[0];
-  return {
-    url: first.url,
-    headers: first.headers || {},
-    alternatives: media.slice(1).map((m) => ({ url: m.url, headers: m.headers || {} })),
-    label: "FrameXTV"
-  };
+  let captured;
+  try {
+    captured = await kino.browser.capture(embed, { timeoutMs: 25000, autoplay: true });
+  } catch (error) {
+    const reason = String(error && (error.message || error.code) || "sin respuesta");
+    if (/timeout/i.test(reason)) {
+      throw kino.error("unavailable", "FrameXTV tardó demasiado y Kino no detectó el vídeo. Prueba otro título o vuelve a intentarlo más tarde.");
+    }
+    if (/blocked|captcha|human/i.test(reason)) {
+      throw kino.error("unavailable", "FrameXTV bloqueó la captura o pidió una verificación. Kino no puede resolver verificaciones humanas; prueba otro servidor autorizado.");
+    }
+    throw kino.error("unavailable", "Kino no pudo abrir el reproductor de FrameXTV (" + reason.slice(0, 120) + "). Comprueba tu conexión y prueba otro título.");
+  }
+
+  const media = (Array.isArray(captured && captured.media) ? captured.media : [])
+    .filter((m) => m && typeof m.url === "string" && /^https?:\\/\\//i.test(m.url));
+  if (!media.length) {
+    throw kino.error("unavailable", "FrameXTV abrió la página, pero no entregó a Kino una URL de vídeo compatible (HLS, DASH o MP4). Puede que el título no esté disponible o que el proveedor haya cambiado.");
+  }
+
+  // Kino needs the actual media request, not the embed HTML page. Keep the
+  // request headers captured from the player; some providers return 403 without them.
+  const streams = media.map((m) => ({
+    url: m.url,
+    headers: m.headers && typeof m.headers === "object" ? m.headers : {},
+    label: /\\.m3u8(?:$|[?#])/i.test(m.url) ? "FrameXTV · HLS" : /\\.mpd(?:$|[?#])/i.test(m.url) ? "FrameXTV · DASH" : "FrameXTV · MP4"
+  }));
+  return { ...streams[0], alternatives: streams.slice(1) };
 }
