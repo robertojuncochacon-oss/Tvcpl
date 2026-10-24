@@ -165,7 +165,7 @@ export async function resolve(ref) {
   // FrameXTV embed pages are not direct media URLs. Try automatic selection first,
   // then its documented provider identifiers as fallbacks.
   const providers = ["auto", "barbarian", "archer", "goblin", "pekka"];
-  const match = "\\.m3u8|\\.mpd|\\.mp4|master\\.txt|videoplayback|/hls/|\\.m4v|\\.ts(?:[?#]|$)|\\.m3u(?:8)?(?:[?#]|$)|/manifest(?:[/?#]|$)|/playlist(?:[/?#]|$)";
+  const match = "\\.m3u8|\\.mpd|\\.mp4|master\\.txt|videoplayback|/hls/|\\.m4v|\\.ts(?:[?#]|$)|\\.m3u(?:8)?(?:[?#]|$)|/manifest(?:[/?#]|$)|/playlist(?:[/?#]|$)|\\.m4s(?:[?#]|$)|\\.cmfv(?:[?#]|$)|\\.cmfa(?:[?#]|$)|/dash/|/segment/";
   let lastError = null;
 
   for (const provider of providers) {
@@ -177,7 +177,7 @@ export async function resolve(ref) {
     let captured;
     try {
       captured = await kino.browser.capture(target.toString(), {
-        timeoutMs: 12000,
+        timeoutMs: 18000,
         autoplay: true,
         headers: { Referer: FRAME + "/" },
         match
@@ -188,14 +188,30 @@ export async function resolve(ref) {
     }
 
     const media = Array.isArray(captured && captured.media) ? captured.media : [];
-    if (!media.length) continue;
+    const candidates = media
+      .filter((m) => m && typeof m.url === "string" && /^https?:\\/\\//i.test(m.url))
+      .map((m) => {
+        const value = m.url.toLowerCase();
+        const mime = String(m.mime || "").toLowerCase();
+        let score = 0;
+        if (/\\.m3u8(?:$|[?#])/.test(value) || mime.includes("mpegurl")) score = 100;
+        else if (/\\.mpd(?:$|[?#])/.test(value) || mime.includes("dash+xml")) score = 95;
+        else if (/\\.mp4(?:$|[?#])/.test(value) || mime.includes("video/mp4")) score = 90;
+        else if (/\\.m4v(?:$|[?#])/.test(value)) score = 80;
+        else if (mime.startsWith("video/")) score = 70;
+        else if (/\\.m4s(?:$|[?#])|\\.cmfv(?:$|[?#])|\\.cmfa(?:$|[?#])|\\.ts(?:$|[?#])/.test(value)) score = 20;
+        return { ...m, _tvcplScore: score };
+      })
+      .filter((m) => m._tvcplScore > 0)
+      .sort((a, b) => b._tvcplScore - a._tvcplScore);
+    if (!candidates.length) continue;
 
-    const first = media[0];
+    const first = candidates[0];
     return {
       url: first.url,
       mime: first.mime,
       headers: first.headers || {},
-      alternatives: media.slice(1, 8).map((m) => ({ url: m.url, mime: m.mime, headers: m.headers || {} })),
+      alternatives: candidates.slice(1, 8).map((m) => ({ url: m.url, mime: m.mime, headers: m.headers || {} })),
       label: "FrameXTV · " + provider
     };
   }
