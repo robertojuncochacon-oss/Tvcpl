@@ -26,12 +26,26 @@ function url(path, params = {}) {
 }
 
 async function getJson(path, params = {}) {
+  // Kino 0.9.53+ provides its own cached TMDB client and key fallback.
+  // Keep the plugin setting as a fallback for older Kino versions.
+  if (typeof kino.tmdb === "function") {
+    return kino.tmdb(path, params);
+  }
+
   const a = auth();
   const response = await kino.fetch(url(path, params), {
     headers: a.token ? { Authorization: "Bearer " + a.token } : {}
   });
   if (!response.ok) {
-    throw kino.error("unavailable", "TMDB respondió HTTP " + response.status + ". Comprueba tu clave en Ajustes de TVCPL Kino.");
+    const status = response.status;
+    const code = status === 401 || status === 403
+      ? "auth_required"
+      : status === 429
+        ? "rate_limited"
+        : status === 404
+          ? "not_found"
+          : "unavailable";
+    throw kino.error(code, "TMDB respondió HTTP " + status + ". Comprueba tu clave en Ajustes de TVCPL Kino.");
   }
   return response.json();
 }
