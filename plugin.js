@@ -189,17 +189,17 @@ export async function resolve(ref) {
 
     const media = Array.isArray(captured && captured.media) ? captured.media : [];
     const candidates = media
-      .filter((m) => m && typeof m.url === "string" && /^https?:\\/\\//i.test(m.url))
+      .filter((m) => m && typeof m.url === "string" && /^https?:\/\//i.test(m.url))
       .map((m) => {
         const value = m.url.toLowerCase();
         const mime = String(m.mime || "").toLowerCase();
         let score = 0;
-        if (/\\.m3u8(?:$|[?#])/.test(value) || mime.includes("mpegurl")) score = 100;
-        else if (/\\.mpd(?:$|[?#])/.test(value) || mime.includes("dash+xml")) score = 95;
-        else if (/\\.mp4(?:$|[?#])/.test(value) || mime.includes("video/mp4")) score = 90;
-        else if (/\\.m4v(?:$|[?#])/.test(value)) score = 80;
+        if (/\.m3u8(?:$|[?#])/.test(value) || mime.includes("mpegurl")) score = 100;
+        else if (/\.mpd(?:$|[?#])/.test(value) || mime.includes("dash+xml")) score = 95;
+        else if (/\.mp4(?:$|[?#])/.test(value) || mime.includes("video/mp4")) score = 90;
+        else if (/\.m4v(?:$|[?#])/.test(value)) score = 80;
         else if (mime.startsWith("video/")) score = 70;
-        else if (/\\.m4s(?:$|[?#])|\\.cmfv(?:$|[?#])|\\.cmfa(?:$|[?#])|\\.ts(?:$|[?#])/.test(value)) score = 20;
+        else if (/\.m4s(?:$|[?#])|\.cmfv(?:$|[?#])|\.cmfa(?:$|[?#])|\.ts(?:$|[?#])/.test(value)) score = 20;
         return { ...m, _tvcplScore: score };
       })
       .filter((m) => m._tvcplScore > 0)
