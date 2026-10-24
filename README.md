@@ -1,61 +1,39 @@
-# TVCPL — Cine, series y anime
+# TVCPL Kino
 
-Catálogo web responsive construido con React + Vite. Incluye tendencias, búsqueda, películas, series, anime, fichas de título, lista de favoritos guardada en el navegador, enlaces a fuentes externas y un reproductor iframe de terceros configurable para películas y episodios.
+Plugin de Kino para buscar películas, series y anime mediante TMDB y, cuando el proveedor lo permita, reproducirlos a través de FrameXTV.
 
-## Ejecutar localmente
+## Archivos del plugin
 
-Requiere Node.js 20 o superior.
+- `kino-plugin.json`: manifiesto que Kino lee al instalar.
+- `plugin.js`: módulo ES único que implementa `search`, `home`, `episodes` y `resolve`.
+- `.github/workflows/kino-plugin-check.yml`: comprobaciones automáticas de sintaxis y manifiesto.
 
-```bash
-npm install
-npm run dev
+## Instalar esta rama en Kino
+
+En Kino entra en **Ajustes → Plugins → Agregar** y escribe:
+
+```
+robertojuncochacon-oss/Tvcpl@kino-plugin
 ```
 
-Abre la dirección local que indique Vite.
+También puedes pegar el manifiesto de esta rama:
+
+`https://raw.githubusercontent.com/robertojuncochacon-oss/Tvcpl/kino-plugin/kino-plugin.json`
+
+La rama `kino-plugin` está separada de `main`, que conserva el proyecto web React/Vite.
 
 ## Configurar TMDB
 
-1. Crea o inicia sesión en [The Movie Database](https://www.themoviedb.org/).
-2. Entra en [Ajustes de API](https://www.themoviedb.org/settings/api) y crea una API key / Read Access Token.
-3. Abre TVCPL y pulsa el engranaje de Ajustes. Pega el **API Read Access Token** y guarda.
-4. La clave se guarda en el almacenamiento local de ese navegador; no está escrita en el repositorio.
+En los ajustes del plugin pega una clave API v3 o un Read Access Token v4 de TMDB. La clave se guarda en la configuración local de Kino; no la añadas al código ni a GitHub.
 
-**Seguridad:** no publiques una clave real en código o en un repositorio. Como la app consulta TMDB desde el navegador, un token utilizado en cliente puede ser inspeccionado por un usuario avanzado. Para producción con una clave que deba mantenerse secreta, usa un backend/proxy.
+## Permisos de reproducción
 
-## Publicar en GitHub Pages
+El manifiesto declara `browser: true` y `streamHosts: "any"` porque FrameXTV usa una página de embed y el flujo real puede venir de un CDN distinto. Kino solicitará aprobación explícita para estas capacidades. La reproducción solo funcionará si el embed expone un flujo compatible HLS, DASH o MP4. Algunos títulos pueden no estar disponibles.
 
-El workflow `.github/workflows/deploy.yml` construye y publica el sitio cuando hay un push a `main`. En el repositorio, ve a **Settings → Pages** y configura **Build and deployment → Source: GitHub Actions**. Después revisa **Actions** para ver el resultado del despliegue. La URL habitual será `https://robertojuncochacon-oss.github.io/Tvcpl/` una vez que Pages complete la publicación.
+## Validación
 
-## Reproductor externo
+El workflow de GitHub Actions comprueba el JSON del manifiesto, los campos esenciales y la sintaxis JavaScript. Esto no sustituye una prueba de instalación y reproducción dentro de Kino. Para una validación completa con el SDK oficial, consulta la guía de plugins: https://kinotvapp.github.io/kino-plugins/
 
-El reproductor utiliza un iframe de FrameXTV con el ID TMDB seleccionado. La disponibilidad, compatibilidad con iframes y derechos del contenido dependen del proveedor externo. Un ID de TMDB identifica una obra, pero no garantiza que el proveedor disponga de ella. Usa únicamente contenido para el que tengas autorización.
+## Fuentes y uso responsable
 
-## Fuentes
-
-- [TBCPL](https://tbcpl.lol/)
-- [IMDb](https://www.imdb.com/)
-- [BestFreeStreaming](https://bestfreestreaming.org/)
-- [TMDB](https://www.themoviedb.org/)
-
-Los nombres y enlaces externos pertenecen a sus respectivos titulares. TVCPL es un catálogo independiente y no afirma estar afiliado a esas plataformas.
-
-
-## Instalar como plugin de Kino
-
-Este repositorio también incluye los archivos de plugin de Kino en la raíz:
-
-- `kino-plugin.json`: manifiesto que Kino lee al instalar.
-- `plugin.js`: búsqueda, Inicio, episodios y resolución de reproducción.
-
-En Kino abre **Ajustes → Plugins → Agregar** y escribe:
-
-```
-robertojuncochacon-oss/Tvcpl
-```
-
-O pega el manifiesto:
-`https://raw.githubusercontent.com/robertojuncochacon-oss/Tvcpl/main/kino-plugin.json`
-
-Al instalarlo, Kino pedirá permiso para usar el navegador oculto y capturar un flujo de vídeo de FrameXTV. Acepta solo si quieres habilitar esa función. El catálogo necesita una clave o Read Access Token de TMDB: entra en los ajustes del plugin y pégalo allí; no lo guardes en el código ni lo publiques.
-
-**Compatibilidad real:** el manifiesto y el archivo JavaScript siguen el formato de plugins de Kino, pero la reproducción de cada título depende de que FrameXTV exponga un flujo HLS/DASH/MP4 que Kino pueda capturar. Este paso debe probarse dentro de Kino en tu dispositivo.
+TVCPL usa la API de TMDB para metadatos. FrameXTV es un proveedor externo independiente. Utiliza únicamente contenidos que tengas derecho a reproducir.
