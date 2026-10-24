@@ -168,8 +168,9 @@ export async function resolve(ref) {
   try {
     captured = await kino.browser.capture(embed, {
       timeoutMs: 25000,
+      autoplay: true,
       headers: { Referer: FRAME + "/" },
-      match: "\\.m3u8|\\.mpd|\\.mp4|master\\.txt|videoplayback|/hls/|\\.m4v|\\.ts(?:[?#]|$)"
+      match: "\\.m3u8|\\.mpd|\\.mp4|master\\.txt|videoplayback|/hls/|\\.m4v|\\.ts(?:[?#]|$)|\\.m3u(?:8)?(?:[?#]|$)|/manifest(?:[/?#]|$)|/playlist(?:[/?#]|$)"
     });
   } catch (error) {
     const code = error && error.code ? String(error.code) : "capture_failed";
