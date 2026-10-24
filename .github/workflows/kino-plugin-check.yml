@@ -1,0 +1,43 @@
+name: Validate Kino plugin
+
+on:
+  push:
+    branches: [kino-plugin]
+  pull_request:
+    branches: [kino-plugin]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate manifest and entry
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const manifest = JSON.parse(fs.readFileSync('kino-plugin.json', 'utf8'));
+          const required = ['id', 'name', 'version', 'apiVersion', 'entry', 'description', 'hosts', 'capabilities'];
+          const missing = required.filter((key) => manifest[key] === undefined || manifest[key] === null);
+          if (missing.length) throw new Error('Missing manifest fields: ' + missing.join(', '));
+          if (!/^[a-z0-9][a-z0-9-]{1,39}$/.test(manifest.id)) throw new Error('Invalid plugin id');
+          if (!/^\d+\.\d+\.\d+$/.test(manifest.version)) throw new Error('Invalid plugin version');
+          if (!Number.isInteger(manifest.apiVersion) || manifest.apiVersion < 1 || manifest.apiVersion > 11) throw new Error('Invalid apiVersion');
+          if (manifest.entry.startsWith('./') || !manifest.entry.endsWith('.js') || manifest.entry.includes('..')) throw new Error('Invalid entry path');
+          if (!fs.existsSync(manifest.entry)) throw new Error('Entry file not found: ' + manifest.entry);
+          if (!Array.isArray(manifest.hosts) || manifest.hosts.length === 0) throw new Error('hosts must be a non-empty array');
+          if (!Array.isArray(manifest.capabilities)) throw new Error('capabilities must be an array');
+          if (manifest.browser === true && manifest.apiVersion < 6) throw new Error('browser:true requires apiVersion 6');
+          if (manifest.streamHosts === 'any' && manifest.apiVersion < 4) throw new Error('streamHosts:any requires apiVersion 4');
+          console.log('Manifest OK:', manifest.id, manifest.version, 'entry:', manifest.entry);
+          NODE
+      - name: Check JavaScript syntax
+        run: node --check plugin.js
