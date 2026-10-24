@@ -162,19 +162,37 @@ export async function resolve(ref) {
     embed = FRAME + "/embed/" + tmdbId + "/" + season + "/" + episode + "?autoplay=1&muted=0";
   }
 
-  // The embed URL is not itself a media stream. Capture the real HLS/DASH/MP4
-  // request only when the person presses Play, then preserve the player headers.
-  const captured = await kino.browser.capture(embed, { timeoutMs: 22000 });
-  const media = Array.isArray(captured.media) ? captured.media : [];
+  // The embed page is not itself a playable stream. Capture the media request
+  // made by its player, including common extensionless HLS/DASH endpoint names.
+  let captured;
+  try {
+    captured = await kino.browser.capture(embed, {
+      timeoutMs: 25000,
+      headers: { Referer: FRAME + "/" },
+      match: "\\.m3u8|\\.mpd|\\.mp4|master\\.txt|videoplayback|/hls/|\\.m4v|\\.ts(?:[?#]|$)"
+    });
+  } catch (error) {
+    const code = error && error.code ? String(error.code) : "capture_failed";
+    throw kino.error(
+      "unavailable",
+      "No se pudo capturar el vídeo de FrameXTV (" + code + "). Comprueba que FrameXTV permita reproducir este título y vuelve a intentarlo."
+    );
+  }
+
+  const media = Array.isArray(captured && captured.media) ? captured.media : [];
   if (!media.length) {
-    throw kino.error("unavailable", "FrameXTV no entregó un flujo de vídeo compatible para este título.");
+    throw kino.error(
+      "unavailable",
+      "FrameXTV abrió el reproductor, pero Kino no detectó una URL de vídeo compatible. Puede que este título use un formato que la captura no reconoce."
+    );
   }
 
   const first = media[0];
   return {
     url: first.url,
+    mime: first.mime,
     headers: first.headers || {},
-    alternatives: media.slice(1, 8).map((m) => ({ url: m.url, headers: m.headers || {} })),
+    alternatives: media.slice(1, 8).map((m) => ({ url: m.url, mime: m.mime, headers: m.headers || {} })),
     label: "FrameXTV"
   };
 }
