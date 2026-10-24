@@ -1,0 +1,29 @@
+{
+  "id": "kino-web-search",
+  "name": "Kino Web Search",
+  "version": "0.1.0",
+  "apiVersion": 6,
+  "entry": "plugin.js",
+  "description": "Acceso experimental a FrameXTV desde Kino. Un plugin no puede garantizar navegación web interactiva completa; requiere soporte del navegador de Kino.",
+  "author": "robertojuncochacon-oss",
+  "homepage": "https://github.com/robertojuncochacon-oss/Tvcpl/tree/kino-web-browser",
+  "hosts": [
+    "framextv.xyz",
+    "share.google"
+  ],
+  "browser": true,
+  "capabilities": [
+    "search",
+    "home",
+    "resolve"
+  ],
+  "color": "#e50914",
+  "settings": [
+    {
+      "key": "startUrl",
+      "label": "Página inicial",
+      "type": "text",
+      "hint": "URL de la página web que quieres abrir. Usa una dirección HTTPS."
+    }
+  ]
+}
