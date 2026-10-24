@@ -1,15 +1,14 @@
 {
-  "id": "tvcpl",
-  "name": "TVCPL",
-  "version": "1.0.0",
+  "id": "tvcpl-kino",
+  "name": "TVCPL Kino",
+  "version": "0.1.0",
   "apiVersion": 6,
   "entry": "plugin.js",
-  "description": "Catálogo de películas, series y anime con búsqueda TMDB y reproducción externa cuando FrameXTV ofrece un flujo compatible.",
+  "description": "Catálogo de películas, series y anime con TMDB y reproducción externa mediante FrameXTV cuando hay un flujo compatible.",
   "author": "robertojuncochacon-oss",
-  "homepage": "https://github.com/robertojuncochacon-oss/Tvcpl",
+  "homepage": "https://github.com/robertojuncochacon-oss/Tvcpl/tree/kino-plugin",
   "hosts": [
     "api.themoviedb.org",
-    "image.tmdb.org",
     "framextv.xyz"
   ],
   "streamHosts": "any",
@@ -24,9 +23,9 @@
   "settings": [
     {
       "key": "tmdbKey",
-      "label": "TMDB API key o Read Access Token",
+      "label": "Clave TMDB v3 o Read Access Token v4",
       "type": "text",
-      "hint": "Pega tu clave v3 o token v4. No la publiques en el repositorio."
+      "hint": "Pega tu clave o token personal. No lo publiques en el repositorio."
     }
   ]
 }
