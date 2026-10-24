@@ -37,7 +37,15 @@ jobs:
           if (!Array.isArray(manifest.capabilities)) throw new Error('capabilities must be an array');
           if (manifest.browser === true && manifest.apiVersion < 6) throw new Error('browser:true requires apiVersion 6');
           if (manifest.streamHosts === 'any' && manifest.apiVersion < 4) throw new Error('streamHosts:any requires apiVersion 4');
-          console.log('Manifest OK:', manifest.id, manifest.version, 'entry:', manifest.entry);
+          const source = fs.readFileSync(manifest.entry, 'utf8');
+          const exportMap = { search: 'search', home: 'home', browse: 'browse', episodes: 'episodes', resolve: 'resolve' };
+          for (const capability of manifest.capabilities) {
+            const exported = exportMap[capability];
+            if (exported && !new RegExp('export\\\\s+async\\\\s+function\\\\s+' + exported + '\\\\s*\\\\(').test(source)) {
+              throw new Error('Capability "' + capability + '" is declared but export ' + exported + ' is missing');
+            }
+          }
+          console.log('Manifest and declared exports OK:', manifest.id, manifest.version, 'entry:', manifest.entry);
           NODE
       - name: Check JavaScript syntax
         run: node --check plugin.js
