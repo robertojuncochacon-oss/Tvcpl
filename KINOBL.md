@@ -1,6 +1,6 @@
 # KinoBl · Catálogo de fuentes
 
-Plugin de catálogo para Kino API v6 (**versión 1.0.2**). Incluye enlaces externos organizados por categorías y búsqueda por nombre, categoría, descripción o URL.
+Plugin de catálogo para Kino API v6 (**versión 1.0.3**). Incluye enlaces externos organizados por categorías y búsqueda por nombre, categoría, descripción o URL. No requiere claves de API ni servicios externos de metadatos.
 
 ## Instalación
 
@@ -19,8 +19,6 @@ Plugin de catálogo para Kino API v6 (**versión 1.0.2**). Incluye enlaces exter
 ## Alcance y limitaciones
 
 KinoBl es un **directorio de enlaces externos**. No extrae enlaces directos de vídeo, no evade restricciones de acceso y no garantiza que los sitios abran o reproduzcan dentro del reproductor de Kino. La reproducción depende de cada web, su disponibilidad y las capacidades del navegador integrado. Si un sitio no reproduce dentro de Kino, prueba abrirlo en el navegador del teléfono.
-
-No se necesita una clave de TMDB para este catálogo básico.
 
 ## Diagnóstico
 
