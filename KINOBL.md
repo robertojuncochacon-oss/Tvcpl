@@ -1,15 +1,15 @@
 # KinoBl · Catálogo de fuentes
 
-Plugin de catálogo para Kino API v6. Agrupa enlaces externos por categoría y permite buscar por nombre o categoría.
+Plugin de catálogo para Kino API v6 (**versión 1.0.2**). Incluye enlaces externos organizados por categorías y búsqueda por nombre, categoría, descripción o URL.
 
 ## Instalación
 
-1. Abre Kino TV.
-2. Entra en la sección de plugins y elige añadir/instalar desde repositorio (el nombre exacto puede variar según la versión).
-3. Usa el repositorio `robertojuncochacon-oss/Tvcpl` y selecciona la rama `KinoBl`, si la aplicación permite indicar una rama.
-4. Si Kino pide el manifiesto directamente, prueba esta URL:
+1. Abre Kino TV y entra en Plugins.
+2. Selecciona añadir/instalar desde repositorio, si tu versión lo permite.
+3. Usa el repositorio `robertojuncochacon-oss/Tvcpl` y la rama `KinoBl`.
+4. Si Kino pide el manifiesto directamente, prueba:
    `https://raw.githubusercontent.com/robertojuncochacon-oss/Tvcpl/KinoBl/kino-plugin.json`
-5. Reinicia o actualiza la lista de plugins y busca **KinoBl · Catálogo de fuentes**.
+5. Actualiza la lista de plugins o reinicia Kino TV y busca **KinoBl · Catálogo de fuentes**.
 
 ## Archivos
 
@@ -18,10 +18,12 @@ Plugin de catálogo para Kino API v6. Agrupa enlaces externos por categoría y p
 
 ## Alcance y limitaciones
 
-KinoBl es un **directorio de enlaces externos**. No extrae enlaces directos de vídeo, no evade restricciones de acceso y no garantiza que los sitios abran o reproduzcan dentro del reproductor de Kino. La reproducción depende de cada web, de su disponibilidad y de lo que permita el navegador integrado de Kino. Los enlaces externos pueden abrirse en un navegador si Kino no los reproduce internamente.
+KinoBl es un **directorio de enlaces externos**. No extrae enlaces directos de vídeo, no evade restricciones de acceso y no garantiza que los sitios abran o reproduzcan dentro del reproductor de Kino. La reproducción depende de cada web, su disponibilidad y las capacidades del navegador integrado. Si un sitio no reproduce dentro de Kino, prueba abrirlo en el navegador del teléfono.
 
 No se necesita una clave de TMDB para este catálogo básico.
 
 ## Diagnóstico
 
-Si el plugin no aparece, confirma que Kino acepte plugins API v6 y que admita instalar desde una rama o desde una URL de manifiesto. Si aparece pero un enlace no reproduce, prueba abrir ese enlace en el navegador del teléfono: eso distingue un problema del sitio de una limitación del reproductor integrado.
+- Si el plugin no aparece, confirma que tu versión de Kino admita plugins API v6 y la instalación desde una rama o una URL de manifiesto.
+- Si aparece pero la búsqueda no devuelve resultados, prueba con el nombre de una fuente o una categoría, por ejemplo `Anime`, `Deportes` o `Documentales`.
+- Si un enlace abre pero no reproduce, puede ser una limitación del sitio o del reproductor integrado; este catálogo no convierte páginas externas en streams compatibles.
