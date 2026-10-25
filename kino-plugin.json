@@ -1,31 +1,25 @@
 {
-  "id": "tvcpl-kino",
-  "name": "TVCPL Kino",
-  "version": "0.1.6",
+  "id": "kinobl-sources",
+  "name": "KinoBl · Catálogo de fuentes",
+  "version": "1.0.0",
   "apiVersion": 6,
   "entry": "plugin.js",
-  "description": "Catálogo de películas, series y anime con TMDB y reproducción externa mediante FrameXTV cuando hay un flujo compatible.",
+  "description": "Directorio por categorías de fuentes externas de películas, series, anime, deportes, documentales y herramientas. No extrae ni garantiza streams.",
   "author": "robertojuncochacon-oss",
-  "homepage": "https://github.com/robertojuncochacon-oss/Tvcpl/tree/kino-plugin",
+  "homepage": "https://github.com/robertojuncochacon-oss/Tvcpl/tree/KinoBl",
   "hosts": [
     "api.themoviedb.org",
-    "framextv.xyz"
+    "archive.org",
+    "www.documentarymania.com",
+    "www.documentarytube.com",
+    "footballia.net",
+    "www.gnu.org"
   ],
-  "streamHosts": "any",
   "browser": true,
   "capabilities": [
     "search",
-    "home",
-    "episodes",
-    "resolve"
+    "home"
   ],
   "color": "#e50914",
-  "settings": [
-    {
-      "key": "tmdbKey",
-      "label": "Clave TMDB v3 o Read Access Token v4",
-      "type": "text",
-      "hint": "Pega tu clave o token personal. No lo publiques en el repositorio."
-    }
-  ]
+  "settings": []
 }
