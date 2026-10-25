@@ -1,224 +1,45 @@
-// TVCPL Kino plugin — single ES module, no imports or Node/browser globals.
-// Requires apiVersion 6 because playback capture uses kino.browser.capture.
-
-const TMDB = "https://api.themoviedb.org/3";
-const POSTER = "https://image.tmdb.org/t/p/w500";
-const BACKDROP = "https://image.tmdb.org/t/p/w1280";
-const FRAME = "https://framextv.xyz";
-
-function auth() {
-  const value = String(kino.config.get("tmdbKey") || "").trim();
-  if (!value) throw kino.error("configuration", "Configura tu clave API o Read Access Token de TMDB en los ajustes de TVCPL Kino.");
-  // TMDB v4 Read Access Tokens are JWTs; v3 keys are sent as api_key.
-  return value.startsWith("eyJ") ? { token: value, key: "" } : { token: "", key: value };
-}
-
-function url(path, params = {}) {
-  const a = auth();
-  const query = [];
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") {
-      query.push(encodeURIComponent(key) + "=" + encodeURIComponent(String(value)));
-    }
-  }
-  if (a.key) query.push("api_key=" + encodeURIComponent(a.key));
-  return TMDB + path + (query.length ? "?" + query.join("&") : "");
-}
-
-async function getJson(path, params = {}) {
-  // Kino 0.9.53+ provides its own cached TMDB client and key fallback.
-  // Keep the plugin setting as a fallback for older Kino versions.
-  if (typeof kino.tmdb === "function") {
-    return kino.tmdb(path, params);
-  }
-
-  const a = auth();
-  const response = await kino.fetch(url(path, params), {
-    headers: a.token ? { Authorization: "Bearer " + a.token } : {}
-  });
-  if (!response.ok) {
-    const status = response.status;
-    const code = status === 401 || status === 403
-      ? "auth_required"
-      : status === 429
-        ? "rate_limited"
-        : status === 404
-          ? "not_found"
-          : "unavailable";
-    throw kino.error(code, "TMDB respondió HTTP " + status + ". Comprueba tu clave en Ajustes de TVCPL Kino.");
-  }
-  return response.json();
-}
-
-function itemFrom(result, forcedType) {
-  const type = forcedType || result.media_type || (result.first_air_date !== undefined ? "tv" : "movie");
-  if (type !== "movie" && type !== "tv") return null;
-  const id = String(result.id || "");
-  if (!/^\d{1,12}$/.test(id)) return null;
-
-  const title = result.title || result.name || result.original_title || result.original_name || "Sin título";
-  const date = result.release_date || result.first_air_date || "";
-  return {
-    id: type + "-" + id,
-    ref: type + "|" + id,
-    title: String(title).slice(0, 200),
-    kind: type === "tv" ? "series" : "movie",
-    year: date ? String(date).slice(0, 4) : undefined,
-    poster: result.poster_path ? POSTER + result.poster_path : undefined,
-    backdrop: result.backdrop_path ? BACKDROP + result.backdrop_path : undefined,
-    overview: result.overview || undefined,
-    rating: typeof result.vote_average === "number" ? result.vote_average : undefined,
-    ids: { tmdb: Number(id) }
-  };
-}
-
-function mapItems(results) {
-  return (Array.isArray(results) ? results : []).map((r) => itemFrom(r)).filter(Boolean);
-}
-
-function preferType(items, requestedType) {
-  const preferred = requestedType === "series" ? "series" : requestedType === "movie" ? "movie" : "";
-  if (!preferred) return items;
-  return items.slice().sort((a, b) => Number(b.kind === preferred) - Number(a.kind === preferred));
-}
-
-export async function search(query) {
-  const q = String(query && query.q || "").trim();
-  if (!q) return [];
-  const data = await getJson("/search/multi", {
-    query: q,
-    include_adult: "false",
-    language: "es-ES",
-    page: 1
-  });
-  return preferType(mapItems(data.results), query.type).slice(0, 40);
-}
-
+// KinoBl — Kino API v6 catalog plugin. Directory only; no stream scraping.
+const SOURCES = [
+["Fly Stream","https://share.google/gmMvOn5uR4aExEUBK","Películas y series"],
+["BingeBang","https://zoechip.bz/home","Películas y series"],
+["Cinebros","https://cinebros.net/","Películas y series"],
+["Zenox","https://zenox.lol/","Películas y series"],
+["Redflix","https://redflix.one/","Películas y series"],
+["Nexa","https://nexa.mov/","Películas y series"],
+["Flixer","https://flixer.gd/","Películas y series"],
+["Boredflix","https://boredflix.to/","Películas y series"],
+["Anichi","https://anichi.to/home","Anime"],
+["AnimeSalt","https://animesalt.to/","Anime"],
+["AniHQ","https://anihq.org/home","Anime"],
+["Mirrors","https://mirrors.st/","Anime"],
+["GoStreamEast","https://gostreameast.link/","Deportes en directo"],
+["STRMD","https://strmd.link/","Deportes en directo"],
+["TheTVApp","https://thetvapp.st/","TV en directo"],
+["AuraSports","https://aurasports.xyz/","Deportes en directo"],
+["DamiTV","https://damitv.st/","TV en directo"],
+["Documentary Mania","https://www.documentarymania.com/","Documentales"],
+["Documentary Tube","https://www.documentarytube.com/","Documentales"],
+["Footballia","https://footballia.net/","Fútbol histórico"],
+["MLB Live","https://mlblive.net/","Deportes"],
+["Time Soccer TV","https://timesoccertv.com/","Guías de fútbol"],
+["FMHY Video Tools","https://fmhy.net/video-tools/#video-download","Herramientas de vídeo"],
+["FMHY Downloading","https://fmhy.net/downloading","Herramientas de descarga"],
+["LeonFlix","https://leonflix.net/","Herramientas multimedia"],
+["GNU Wget","https://www.gnu.org/software/wget/","Herramientas de descarga"],
+["Orionoid","https://orionoid.com/","Herramientas multimedia"],
+["SANET","https://sanet.st/full/","Recursos web"],
+["Hatt (GitHub)","https://github.com/FrenchGithubUser/Hatt","Herramientas multimedia"],
+["WCO Stream","https://www.wcostream.org/","Animación"],
+["KissCartoon","https://kisscartoon.nz/","Animación"],
+["KimCartoon","https://kimcartoon.li/","Animación"],
+["Internet Archive","https://archive.org/","Archivo digital y dominio público"]
+].map(([title,url,category],i)=>({id:"kinobl-"+i,ref:"source|"+i,title,kind:"source",overview:category+" · Fuente externa; disponibilidad y reproducción dependen del sitio.",url,category}));
 export async function home() {
-  const data = await getJson("/trending/all/week", { language: "es-ES", page: 1 });
-  const items = mapItems(data.results).slice(0, 20);
-  return items.length ? [{ id: "tvcpl-trending", title: "TVCPL · Tendencias", items }] : [];
+ const categories=[...new Set(SOURCES.map(s=>s.category))];
+ return categories.map((category,index)=>({id:"kinobl-category-"+index,title:category,items:SOURCES.filter(s=>s.category===category)}));
 }
-
-export async function episodes(ref) {
-  const parts = String(ref || "").split("|");
-  if (parts[0] !== "tv" || !/^\d+$/.test(parts[1] || "")) return { episodes: [] };
-
-  const showId = parts[1];
-  const seriesData = await getJson("/tv/" + showId, { language: "es-ES" });
-  const seasons = (seriesData.seasons || []).filter((s) =>
-    Number(s.season_number) > 0 && Number(s.episode_count) > 0
-  );
-  const requestedSeason = Number(parts[2]);
-  const seasonNumber = Number.isInteger(requestedSeason) && requestedSeason > 0
-    ? requestedSeason
-    : (seasons[0] ? Number(seasons[0].season_number) : 1);
-
-  const seasonData = await getJson("/tv/" + showId + "/season/" + seasonNumber, { language: "es-ES" });
-  return {
-    series: {
-      title: seriesData.name || "Serie",
-      poster: seriesData.poster_path ? POSTER + seriesData.poster_path : undefined,
-      backdrop: seriesData.backdrop_path ? BACKDROP + seriesData.backdrop_path : undefined,
-      overview: seriesData.overview || undefined,
-      year: seriesData.first_air_date ? String(seriesData.first_air_date).slice(0, 4) : undefined,
-      ids: { tmdb: Number(showId) }
-    },
-    seasons: seasons.slice(0, 50).map((s) => ({
-      id: "tvcpl-season-" + showId + "-" + s.season_number,
-      ref: "tv|" + showId + "|" + Number(s.season_number),
-      title: "Temporada " + s.season_number,
-      number: Number(s.season_number),
-      current: Number(s.season_number) === seasonNumber
-    })),
-    episodes: (seasonData.episodes || []).map((ep) => ({
-      season: Number(ep.season_number) || seasonNumber,
-      number: Number(ep.episode_number) || 1,
-      ref: "tv|" + showId + "|" + seasonNumber + "|" + Number(ep.episode_number),
-      title: ep.name || ("Episodio " + ep.episode_number),
-      still: ep.still_path ? POSTER + ep.still_path : undefined,
-      overview: ep.overview || undefined,
-      airDate: ep.air_date || undefined,
-      runtimeMinutes: Number(ep.runtime) > 0 ? Number(ep.runtime) : undefined
-    }))
-  };
-}
-
-export async function resolve(ref) {
-  const parts = String(ref || "").split("|");
-  const type = parts[0];
-  const tmdbId = parts[1];
-  if ((type !== "movie" && type !== "tv") || !/^\d{1,12}$/.test(tmdbId || "")) {
-    throw kino.error("unavailable", "No se reconoce el título seleccionado.");
-  }
-
-  let embed = FRAME + "/embed/" + tmdbId + "?autoplay=1&muted=0";
-  if (type === "tv") {
-    const season = Number(parts[2]);
-    const episode = Number(parts[3]);
-    if (!Number.isInteger(season) || season < 1 || !Number.isInteger(episode) || episode < 1) {
-      throw kino.error("unavailable", "Selecciona una temporada y un episodio válidos.");
-    }
-    embed = FRAME + "/embed/" + tmdbId + "/" + season + "/" + episode + "?autoplay=1&muted=0";
-  }
-
-  // FrameXTV embed pages are not direct media URLs. Try automatic selection first,
-  // then its documented provider identifiers as fallbacks.
-  const providers = ["auto", "barbarian", "archer", "goblin", "pekka"];
-  const match = "\\.m3u8|\\.mpd|\\.mp4|master\\.txt|videoplayback|/hls/|\\.m4v|\\.ts(?:[?#]|$)|\\.m3u(?:8)?(?:[?#]|$)|/manifest(?:[/?#]|$)|/playlist(?:[/?#]|$)|\\.m4s(?:[?#]|$)|\\.cmfv(?:[?#]|$)|\\.cmfa(?:[?#]|$)|/dash/|/segment/";
-  let lastError = null;
-
-  for (const provider of providers) {
-    // Avoid relying on browser globals inside Kino's plugin runtime.
-    // FrameXTV documents both "server" and "provider" query parameters.
-    const target = provider === "auto"
-      ? embed
-      : embed + "&server=" + provider + "&provider=" + provider;
-    let captured;
-    try {
-      captured = await kino.browser.capture(target.toString(), {
-        timeoutMs: 18000,
-        autoplay: true,
-        headers: { Referer: FRAME + "/" },
-        match
-      });
-    } catch (error) {
-      lastError = error;
-      continue;
-    }
-
-    const media = Array.isArray(captured && captured.media) ? captured.media : [];
-    const candidates = media
-      .filter((m) => m && typeof m.url === "string" && /^https?:\/\//i.test(m.url))
-      .map((m) => {
-        const value = m.url.toLowerCase();
-        const mime = String(m.mime || "").toLowerCase();
-        let score = 0;
-        if (/\.m3u8(?:$|[?#])/.test(value) || mime.includes("mpegurl")) score = 100;
-        else if (/\.mpd(?:$|[?#])/.test(value) || mime.includes("dash+xml")) score = 95;
-        else if (/\.mp4(?:$|[?#])/.test(value) || mime.includes("video/mp4")) score = 90;
-        else if (/\.m4v(?:$|[?#])/.test(value)) score = 80;
-        else if (mime.startsWith("video/")) score = 70;
-        else if (/\.m4s(?:$|[?#])|\.cmfv(?:$|[?#])|\.cmfa(?:$|[?#])|\.ts(?:$|[?#])/.test(value)) score = 20;
-        return { ...m, _tvcplScore: score };
-      })
-      .filter((m) => m._tvcplScore > 0)
-      .sort((a, b) => b._tvcplScore - a._tvcplScore);
-    if (!candidates.length) continue;
-
-    const first = candidates[0];
-    return {
-      url: first.url,
-      mime: first.mime,
-      headers: first.headers || {},
-      alternatives: candidates.slice(1, 8).map((m) => ({ url: m.url, mime: m.mime, headers: m.headers || {} })),
-      label: "FrameXTV · " + provider
-    };
-  }
-
-  const code = lastError && lastError.code ? String(lastError.code) : "no_media_detected";
-  throw kino.error(
-    "unavailable",
-    "FrameXTV no entregó a Kino un enlace de vídeo compatible tras probar selección automática y servidores alternativos (" + code + "). Prueba otro título o revisa la compatibilidad del proveedor."
-  );
+export async function search(query) {
+ const q=String(query&&query.q||"").trim().toLocaleLowerCase();
+ if(!q) return SOURCES.slice(0,40);
+ return SOURCES.filter(s=>s.title.toLocaleLowerCase().includes(q)||s.category.toLocaleLowerCase().includes(q)||s.overview.toLocaleLowerCase().includes(q)).slice(0,40);
 }
