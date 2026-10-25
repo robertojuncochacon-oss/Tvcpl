@@ -1,15 +1,16 @@
 {
   "id": "tvcpl-kino",
   "name": "TVCPL Kino",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "apiVersion": 6,
   "entry": "plugin.js",
-  "description": "Catálogo de películas, series y anime con TMDB y reproducción externa mediante FrameXTV cuando hay un flujo compatible.",
+  "description": "Catálogo TMDB con reproducción FrameXTV y fuente alternativa Internet Archive para vídeos que declaran licencia pública o Creative Commons compatible.",
   "author": "robertojuncochacon-oss",
   "homepage": "https://github.com/robertojuncochacon-oss/Tvcpl/tree/kino-plugin",
   "hosts": [
     "api.themoviedb.org",
-    "framextv.xyz"
+    "framextv.xyz",
+    "archive.org"
   ],
   "streamHosts": "any",
   "browser": true,
