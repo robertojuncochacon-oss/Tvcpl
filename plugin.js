@@ -144,6 +144,61 @@ export async function episodes(ref) {
   };
 }
 
+async function archiveFallback(type, tmdbId) {
+  // Fallback limited to Internet Archive items whose metadata declares public-domain
+  // or a Creative Commons BY/BY-SA license. Availability and rights metadata vary by item.
+  const details = await getJson(type === "tv" ? "/tv/" + tmdbId : "/movie/" + tmdbId, { language: "en-US" });
+  const title = String(details.title || details.name || "").trim();
+  if (!title) return null;
+
+  const escapedTitle = title.replace(/\\/g, " ").replace(/"/g, " ").replace(/[():]/g, " ").replace(/\\s+/g, " ").trim();
+  const query = 'title:"' + escapedTitle + '" AND mediatype:movies';
+  const searchUrl = "https://archive.org/advancedsearch.php?q=" + encodeURIComponent(query) +
+    "&fl[]=identifier&fl[]=title&fl[]=licenseurl&output=json&rows=5";
+  const response = await kino.fetch(searchUrl, { headers: { Accept: "application/json" } });
+  if (!response.ok) return null;
+  const searchData = await response.json();
+  const docs = searchData && searchData.response && Array.isArray(searchData.response.docs)
+    ? searchData.response.docs : [];
+
+  for (const doc of docs) {
+    if (!doc || !/^[a-zA-Z0-9_-]{3,100}$/.test(String(doc.identifier || ""))) continue;
+    const license = String(doc.licenseurl || "").toLowerCase();
+    const allowedLicense = license.includes("publicdomain") ||
+      license.includes("creativecommons.org/publicdomain/") ||
+      /creativecommons\\.org\\/licenses\\/by(?:-sa)?(?:\\/|$)/.test(license);
+    if (!allowedLicense) continue;
+
+    try {
+      const metaResponse = await kino.fetch("https://archive.org/metadata/" + encodeURIComponent(doc.identifier), {
+        headers: { Accept: "application/json" }
+      });
+      if (!metaResponse.ok) continue;
+      const item = await metaResponse.json();
+      const itemLicense = String(item && item.metadata && item.metadata.licenseurl || license).toLowerCase();
+      const itemAllowed = itemLicense.includes("publicdomain") ||
+        itemLicense.includes("creativecommons.org/publicdomain/") ||
+        /creativecommons\\.org\\/licenses\\/by(?:-sa)?(?:\\/|$)/.test(itemLicense);
+      if (!itemAllowed || (item && item.metadata && item.metadata["access-restricted-item"])) continue;
+      const files = Array.isArray(item.files) ? item.files : [];
+      const video = files.find((file) => file && typeof file.name === "string" &&
+        /\\.mp4$/i.test(file.name) && !file.source?.includes("metadata") &&
+        !file.name.toLowerCase().includes("_thumb"));
+      if (!video) continue;
+      return {
+        url: "https://archive.org/download/" + encodeURIComponent(doc.identifier) + "/" +
+          video.name.split("/").map(encodeURIComponent).join("/"),
+        mime: "video/mp4",
+        headers: { Referer: "https://archive.org/" },
+        label: "Internet Archive · " + String(doc.title || title).slice(0, 80)
+      };
+    } catch (_) {
+      // Try the next Archive.org item rather than breaking normal playback.
+    }
+  }
+  return null;
+}
+
 export async function resolve(ref) {
   const parts = String(ref || "").split("|");
   const type = parts[0];
@@ -216,9 +271,18 @@ export async function resolve(ref) {
     };
   }
 
+  // Last-resort alternative source: Internet Archive items that declare
+  // public-domain or Creative Commons BY/BY-SA licensing. This will not contain every title.
+  try {
+    const archived = await archiveFallback(type, tmdbId);
+    if (archived) return archived;
+  } catch (error) {
+    lastError = lastError || error;
+  }
+
   const code = lastError && lastError.code ? String(lastError.code) : "no_media_detected";
   throw kino.error(
     "unavailable",
-    "FrameXTV no entregó a Kino un enlace de vídeo compatible tras probar selección automática y servidores alternativos (" + code + "). Prueba otro título o revisa la compatibilidad del proveedor."
+    "FrameXTV no entregó un vídeo compatible y no se encontró una copia MP4 licenciada en Internet Archive (" + code + "). Prueba otro título o revisa la compatibilidad del proveedor."
   );
 }
