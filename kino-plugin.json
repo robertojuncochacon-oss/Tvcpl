@@ -1,10 +1,10 @@
 {
   "id": "kinobl-sources",
   "name": "KinoBl · Catálogo de fuentes",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "apiVersion": 6,
   "entry": "plugin.js",
-  "description": "Directorio por categorías de fuentes externas de películas, series, anime, deportes, documentales y herramientas. No extrae ni garantiza streams.",
+  "description": "Directorio por categorías de fuentes externas de películas, series, anime, deportes, documentales y herramientas. No depende de servicios de metadatos externos ni garantiza streams.",
   "author": "robertojuncochacon-oss",
   "homepage": "https://github.com/robertojuncochacon-oss/Tvcpl/tree/KinoBl",
   "hosts": [
