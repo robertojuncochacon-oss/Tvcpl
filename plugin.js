@@ -151,7 +151,7 @@ async function archiveFallback(type, tmdbId) {
   const title = String(details.title || details.name || "").trim();
   if (!title) return null;
 
-  const escapedTitle = title.replace(/\\/g, " ").replace(/"/g, " ").replace(/[():]/g, " ").replace(/\\s+/g, " ").trim();
+  const escapedTitle = title.replace(/\\/g, " ").replace(/"/g, " ").replace(/[():]/g, " ").replace(/\s+/g, " ").trim();
   const query = 'title:"' + escapedTitle + '" AND mediatype:movies';
   const searchUrl = "https://archive.org/advancedsearch.php?q=" + encodeURIComponent(query) +
     "&fl[]=identifier&fl[]=title&fl[]=licenseurl&output=json&rows=5";
@@ -166,7 +166,7 @@ async function archiveFallback(type, tmdbId) {
     const license = String(doc.licenseurl || "").toLowerCase();
     const allowedLicense = license.includes("publicdomain") ||
       license.includes("creativecommons.org/publicdomain/") ||
-      /creativecommons\\.org\\/licenses\\/by(?:-sa)?(?:\\/|$)/.test(license);
+      /creativecommons\.org\/licenses\/by(?:-sa)?(?:\/|$)/.test(license);
     if (!allowedLicense) continue;
 
     try {
@@ -178,11 +178,11 @@ async function archiveFallback(type, tmdbId) {
       const itemLicense = String(item && item.metadata && item.metadata.licenseurl || license).toLowerCase();
       const itemAllowed = itemLicense.includes("publicdomain") ||
         itemLicense.includes("creativecommons.org/publicdomain/") ||
-        /creativecommons\\.org\\/licenses\\/by(?:-sa)?(?:\\/|$)/.test(itemLicense);
+        /creativecommons\.org\/licenses\/by(?:-sa)?(?:\/|$)/.test(itemLicense);
       if (!itemAllowed || (item && item.metadata && item.metadata["access-restricted-item"])) continue;
       const files = Array.isArray(item.files) ? item.files : [];
       const video = files.find((file) => file && typeof file.name === "string" &&
-        /\\.mp4$/i.test(file.name) && !file.source?.includes("metadata") &&
+        /\.mp4$/i.test(file.name) && !file.source?.includes("metadata") &&
         !file.name.toLowerCase().includes("_thumb"));
       if (!video) continue;
       return {
