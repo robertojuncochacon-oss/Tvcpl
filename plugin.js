@@ -1,4 +1,4 @@
-// KinoBl — Kino API v6 catalog plugin. Directory only; no stream scraping.
+// KinoBl — Kino API v6 catalog plugin. External directory only; no stream scraping.
 const SOURCES = [
 ["Fly Stream","https://share.google/gmMvOn5uR4aExEUBK","Películas y series"],
 ["BingeBang","https://zoechip.bz/home","Películas y series"],
@@ -33,13 +33,33 @@ const SOURCES = [
 ["KissCartoon","https://kisscartoon.nz/","Animación"],
 ["KimCartoon","https://kimcartoon.li/","Animación"],
 ["Internet Archive","https://archive.org/","Archivo digital y dominio público"]
-].map(([title,url,category],i)=>({id:"kinobl-"+i,ref:"source|"+i,title,kind:"source",overview:category+" · Fuente externa; disponibilidad y reproducción dependen del sitio.",url,category}));
+].map(([title,url,category],i)=>({
+ id:"kinobl-"+i,
+ ref:"source|"+i,
+ title,
+ kind:"source",
+ overview:category+" · Fuente externa; disponibilidad y reproducción dependen del sitio.",
+ url,
+ category
+}));
+
 export async function home() {
- const categories=[...new Set(SOURCES.map(s=>s.category))];
- return categories.map((category,index)=>({id:"kinobl-category-"+index,title:category,items:SOURCES.filter(s=>s.category===category)}));
+ const categories=[...new Set(SOURCES.map(source=>source.category))];
+ return categories.map((category,index)=>({
+  id:"kinobl-category-"+index,
+  title:category,
+  items:SOURCES.filter(source=>source.category===category)
+ }));
 }
+
 export async function search(query) {
- const q=String(query&&query.q||"").trim().toLocaleLowerCase();
+ const raw=typeof query==="string" ? query : (query && (query.q || query.query)) || "";
+ const q=String(raw).trim().toLocaleLowerCase();
  if(!q) return SOURCES.slice(0,40);
- return SOURCES.filter(s=>s.title.toLocaleLowerCase().includes(q)||s.category.toLocaleLowerCase().includes(q)||s.overview.toLocaleLowerCase().includes(q)).slice(0,40);
+ return SOURCES.filter(source =>
+  source.title.toLocaleLowerCase().includes(q) ||
+  source.category.toLocaleLowerCase().includes(q) ||
+  source.overview.toLocaleLowerCase().includes(q) ||
+  source.url.toLocaleLowerCase().includes(q)
+ ).slice(0,40);
 }
