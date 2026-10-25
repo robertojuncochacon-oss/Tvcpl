@@ -1,7 +1,7 @@
 {
   "id": "kinobl-sources",
   "name": "KinoBl · Catálogo de fuentes",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "apiVersion": 6,
   "entry": "plugin.js",
   "description": "Directorio por categorías de fuentes externas de películas, series, anime, deportes, documentales y herramientas. No extrae ni garantiza streams.",
@@ -42,10 +42,7 @@
     "archive.org"
   ],
   "browser": true,
-  "capabilities": [
-    "search",
-    "home"
-  ],
+  "capabilities": ["search", "home"],
   "color": "#e50914",
   "settings": []
 }
